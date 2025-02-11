@@ -107,3 +107,35 @@ test('purchase with login', async ({ page }) => {
   // Check balance
   await expect(page.getByText('0.008')).toBeVisible();
 });
+
+test('Register User', async ({ page }) => {
+  await page.route('*/**/api/auth', async (route) => {
+    const regRes = {
+      "user": {
+        "name": "RANDY",
+        "email": "RANDY@test.com",
+        "roles": [{ "role": "diner" }],
+        "id": 59
+      },
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiUkFORFkiLCJlbWFpbCI6IlJBTkRZQHRlc3QuY29tIiwicm9sZXMiOlt7InJvbGUiOiJkaW5lciJ9XSwiaWQiOjU5LCJpYXQiOjE3MzkzMDE3ODd9.8QgqAwyIjgT3LEqqOnF_6r6NpLZiLkIDXpMmf-95WbU"
+    };
+    expect(route.request().method()).toBe('POST');
+    await route.fulfill({ json: regRes });
+  });
+
+  //Register
+  await page.goto('/register');
+  await expect(page.getByRole('heading')).toContainText('Welcome to the party');
+  await expect(page.getByRole('textbox', { name: 'Full name' })).toBeVisible();
+  await page.getByRole('textbox', { name: 'Full name' }).click();
+  await page.getByRole('textbox', { name: 'Full name' }).fill('RANDY');
+  await page.getByRole('textbox', { name: 'Full name' }).press('Tab');
+  await page.getByRole('textbox', { name: 'Email address' }).fill('RANDY@test.com');
+  await page.getByRole('textbox', { name: 'Password' }).click();
+  await page.getByRole('textbox', { name: 'Password' }).fill('1234');
+  await page.getByRole('button', { name: 'Register' }).click();
+
+  await page.goto('http://localhost:5173/');
+  await expect(page.getByLabel('Global')).toContainText('R');
+});
+
