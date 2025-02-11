@@ -321,6 +321,6 @@ test('create and delte stores', async ({ page }) => {
   await expect(page.locator('tbody')).toContainText('TEST1');
   await page.getByRole('row', { name: 'TEST1 0 ₿ Close' }).getByRole('button').click();
   await page.getByRole('button', { name: 'Close' }).click();
-  await expect(page.getByRole('heading')).toContainText('1234');
+  await expect(page.getByRole('heading')).toContainText('Sorry to see you go');
 });
 
