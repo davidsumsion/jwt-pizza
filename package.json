@@ -12,12 +12,6 @@
     "test": "playwright test",
     "test:coverage": "nyc --reporter=json-summary --reporter=text playwright test"
   },
-  "nyc": {
-    "include": ["src/**/*.ts"],
-    "exclude": ["tests/**/*.ts"],
-    "reporter": ["text", "html"],
-    "all": true
-  },
   "devDependencies": {
     "@playwright/test": "^1.50.1",
     "@types/node": "^22.13.1",
