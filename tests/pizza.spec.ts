@@ -149,3 +149,103 @@ test('Register User', async ({ page }) => {
   await expect(page.getByRole('heading')).toContainText('The web\'s best pizza');
 });
 
+test('admin add franchise, stores, delete franchise', async ({ page }) => {
+  await page.route('*/**/api/auth', async (route) => {
+    if (route.request().method() === 'POST') {
+      const regRes = {
+        "user": {
+          "name": "RANDY",
+          "email": "RANDY@test.com",
+          "roles": [{ "role": "diner" }],
+          "id": 59
+        },
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiUkFORFkiLCJlbWFpbCI6IlJBTkRZQHRlc3QuY29tIiwicm9sZXMiOlt7InJvbGUiOiJkaW5lciJ9XSwiaWQiOjU5LCJpYXQiOjE3MzkzMDE3ODd9.8QgqAwyIjgT3LEqqOnF_6r6NpLZiLkIDXpMmf-95WbU"
+      };
+      expect(route.request().method()).toBe('POST');
+      await route.fulfill({ json: regRes });
+    } else if (route.request().method() === 'DELETE') {
+      const regRes = { "message": "logout successful" };
+      expect(route.request().method()).toBe('DELETE');
+      await route.fulfill({ json: regRes });
+    } else {
+      const regRes = {
+        "user": {
+          "id": 2,
+          "name": "常用名字",
+          "email": "a@jwt.com",
+          "roles": [
+            {
+              "role": "admin"
+            }
+          ]
+        },
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwibmFtZSI6IuW4uOeUqOWQjeWtlyIsImVtYWlsIjoiYUBqd3QuY29tIiwicm9sZXMiOlt7InJvbGUiOiJhZG1pbiJ9XSwiaWF0IjoxNzM5MzAyMTM2fQ.EP79Z42UFeUmeXkRtcqdsavp3-9_UHy0eLT-fnf0zoU"
+      }
+      expect(route.request().method()).toBe('PUT');
+      await route.fulfill({ json: regRes });
+    }
+  });
+
+  await page.route('*/**/api/franchise', async (route) => {
+    if (route.request().method() === 'POST') {
+      const franchiseRes = {
+        "stores": [],
+        "id": 38,
+        "name": "TESTADD&DELETE",
+        "admins": [
+          {
+            "email": "RANDY@test.com",
+            "id": 58,
+            "name": "RANDY"
+          }
+        ]
+      }
+      expect(route.request().method()).toBe('POST');
+      await route.fulfill({ json: franchiseRes });
+    } else if (route.request().method() === 'GET') {
+      const franchiseRes = [
+        {
+          "id": 38,
+          "name": "TESTADD&DELETE",
+          "admins": [
+            {
+              "id": 58,
+              "name": "RANDY",
+              "email": "RANDY@TEST.com"
+            }
+          ],
+          "stores": []
+        }
+      ]
+      expect(route.request().method()).toBe('GET');
+      await route.fulfill({ json: franchiseRes });
+    }
+  });
+
+  await page.route('*/**/api/franchise/38', async (route) => {
+    const franchiseRes = { "message": "franchise deleted" }
+    expect(route.request().method()).toBe('DELETE');
+    await route.fulfill({ json: franchiseRes });
+  });
+
+  await page.goto('/login');
+  await page.getByRole('textbox', { name: 'Email address' }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('a@jwt.com');
+  await page.getByRole('textbox', { name: 'Email address' }).press('Tab');
+  await page.getByRole('textbox', { name: 'Password' }).fill('admin');
+  await page.getByRole('button', { name: 'Login' }).click();
+  await page.getByRole('link', { name: 'Admin' }).click();
+  await page.getByRole('button', { name: 'Add Franchise' }).click();
+
+  await page.getByRole('textbox', { name: 'franchise name' }).click();
+  await page.getByRole('textbox', { name: 'franchise name' }).fill('TESTADD&DELETE');
+  await page.getByRole('textbox', { name: 'franchisee admin email' }).click();
+  await page.getByRole('textbox', { name: 'franchisee admin email' }).fill('RANDY@test.com');
+  await page.getByRole('button', { name: 'Create' }).click();
+  await page.getByRole('button', { name: 'Close' }).click();
+  await page.getByRole('button', { name: 'Close' }).click();
+  
+  await expect(page.getByRole('heading')).toContainText('Mama Ricci\'s kitchen');
+});
+
+// create-store
