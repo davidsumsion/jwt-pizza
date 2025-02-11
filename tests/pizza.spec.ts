@@ -110,17 +110,23 @@ test('purchase with login', async ({ page }) => {
 
 test('Register User', async ({ page }) => {
   await page.route('*/**/api/auth', async (route) => {
-    const regRes = {
-      "user": {
-        "name": "RANDY",
-        "email": "RANDY@test.com",
-        "roles": [{ "role": "diner" }],
-        "id": 59
-      },
-      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiUkFORFkiLCJlbWFpbCI6IlJBTkRZQHRlc3QuY29tIiwicm9sZXMiOlt7InJvbGUiOiJkaW5lciJ9XSwiaWQiOjU5LCJpYXQiOjE3MzkzMDE3ODd9.8QgqAwyIjgT3LEqqOnF_6r6NpLZiLkIDXpMmf-95WbU"
-    };
-    expect(route.request().method()).toBe('POST');
-    await route.fulfill({ json: regRes });
+    if (route.request().method() === 'POST') {
+      const regRes = {
+        "user": {
+          "name": "RANDY",
+          "email": "RANDY@test.com",
+          "roles": [{ "role": "diner" }],
+          "id": 59
+        },
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiUkFORFkiLCJlbWFpbCI6IlJBTkRZQHRlc3QuY29tIiwicm9sZXMiOlt7InJvbGUiOiJkaW5lciJ9XSwiaWQiOjU5LCJpYXQiOjE3MzkzMDE3ODd9.8QgqAwyIjgT3LEqqOnF_6r6NpLZiLkIDXpMmf-95WbU"
+      };
+      expect(route.request().method()).toBe('POST');
+      await route.fulfill({ json: regRes });
+    } else {
+      const regRes = { "message": "logout successful" };
+      expect(route.request().method()).toBe('DELETE');
+      await route.fulfill({ json: regRes });
+    }
   });
 
   //Register
@@ -137,5 +143,9 @@ test('Register User', async ({ page }) => {
 
   await page.goto('http://localhost:5173/');
   await expect(page.getByLabel('Global')).toContainText('R');
+
+  //Logout
+  await page.getByRole('link', { name: 'Logout' }).click();
+  await expect(page.getByRole('heading')).toContainText('The web\'s best pizza');
 });
 
