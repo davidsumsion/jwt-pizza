@@ -149,7 +149,7 @@ test('Register User', async ({ page }) => {
   await expect(page.getByRole('heading')).toContainText('The web\'s best pizza');
 });
 
-test('admin add franchise, stores, delete franchise', async ({ page }) => {
+test('admin add franchise, delete franchise', async ({ page }) => {
   await page.route('*/**/api/auth', async (route) => {
     if (route.request().method() === 'POST') {
       const regRes = {
@@ -244,8 +244,83 @@ test('admin add franchise, stores, delete franchise', async ({ page }) => {
   await page.getByRole('button', { name: 'Create' }).click();
   await page.getByRole('button', { name: 'Close' }).click();
   await page.getByRole('button', { name: 'Close' }).click();
-  
+
   await expect(page.getByRole('heading')).toContainText('Mama Ricci\'s kitchen');
 });
 
-// create-store
+test('create and delte stores', async ({ page }) => {
+  await page.route('*/**/api/franchise/58', async (route) => {
+    const franchiseRes = [
+      {
+        "id": 40,
+        "name": "1234",
+        "admins": [
+          {
+            "id": 58,
+            "name": "RANDY",
+            "email": "RANDY@TEST.com"
+          }
+        ],
+        "stores": [
+          {
+            "id": 22,
+            "name": "TEST2",
+            "totalRevenue": 0.5
+          },
+          {
+            "id": 23,
+            "name": "TEST1",
+            "totalRevenue": 0
+          }
+        ]
+      }
+    ]
+    expect(route.request().method()).toBe('GET');
+    await route.fulfill({ json: franchiseRes });
+  });
+  await page.route('*/**/api/franchise/40/store', async (route) => {
+    const franchiseRes = { "id": 21, "franchiseId": 40, "name": "TEST1" }
+    expect(route.request().method()).toBe('POST');
+    await route.fulfill({ json: franchiseRes });
+  });
+  await page.route('*/**/api/auth', async (route) => {
+    const loginRes = {
+      "user": {
+        "id": 58,
+        "name": "RANDY",
+        "email": "RANDY@TEST.com",
+        "roles": [
+          {
+            "role": "diner"
+          },
+          {
+            "objectId": 40,
+            "role": "franchisee"
+          }
+        ]
+      },
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NTgsIm5hbWUiOiJSQU5EWSIsImVtYWlsIjoiUkFORFlAVEVTVC5jb20iLCJyb2xlcyI6W3sicm9sZSI6ImRpbmVyIn0seyJvYmplY3RJZCI6NDAsInJvbGUiOiJmcmFuY2hpc2VlIn1dLCJpYXQiOjE3MzkzMDU4ODV9.2viwifcfwahmNPFVQ47RwBs9xgrA1SjQbda4HbxU-cg"
+    }
+    expect(route.request().method()).toBe('PUT');
+    await route.fulfill({ json: loginRes });
+  });
+
+  await page.goto('/franchise-dashboard');
+  await page.getByRole('link', { name: 'Login', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('RANDY@test.com');
+  await page.getByRole('textbox', { name: 'Email address' }).press('Tab');
+  await page.getByRole('textbox', { name: 'Password' }).fill('1234');
+  await page.getByRole('button', { name: 'Login' }).click();
+  await page.getByLabel('Global').getByRole('link', { name: 'Franchise' }).click();
+
+  await page.getByRole('button', { name: 'Create store' }).click();
+  await page.getByRole('textbox', { name: 'store name' }).click();
+  await page.getByRole('textbox', { name: 'store name' }).fill('TEST1');
+  await page.getByRole('button', { name: 'Create' }).click();
+  await expect(page.locator('tbody')).toContainText('TEST1');
+  await page.getByRole('row', { name: 'TEST1 0 ₿ Close' }).getByRole('button').click();
+  await page.getByRole('button', { name: 'Close' }).click();
+  await expect(page.getByRole('heading')).toContainText('1234');
+});
+
