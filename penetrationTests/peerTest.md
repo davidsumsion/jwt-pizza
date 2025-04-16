@@ -42,13 +42,49 @@ Note: I decided not to officially run this command on my own server to avoid AWS
 
 ### Carlee:
 
+#### SQL Injection
+Item            | Result
+----------------|--------
+Date            | April 13, 2025
+Target          | pizza.carlee329.click
+Classification  | Injection
+Severity        | 1
+Description     | Sent PUT /api/auth/1%20OR%201=1 as diner using Repeater and Intruder. Originally updated all users’ emails, confirming SQL injection in updateUser. After fix, received 403 Forbidden, and verified other users’ emails unchanged.
+Images          | [1.png]
+Corrections     | Parameterized userId in updateUser query in database.js.
+
+
+#### Broken Access Control
+Item            | Result
+----------------|--------
+Date            | April 13, 2025
+Target          | pizza.carlee329.click
+Classification  | Broken Access Control
+Severity        | 4 (Low)
+Description     | Sent PUT /api/chaos/true as diner using Repeater. Received 200 OK with {"chaos":false}, indicating non-admins can access the endpoint but not enable chaos.
+Images          | [2.png]
+Corrections     | Updated orderRouter.js to return 403 for non-admins. Retested and confirmed 403 Forbidden.
+
+#### Identification and Authentication Failures
+
+Item            | Result
+----------------|--------
+Date            | April 13, 2025
+Target          | pizza.carlee329.click
+Classification  | Identification and Authentication Failures
+Severity        | 3 (Medium)
+Description     | Decoded JWT from PUT /api/auth using Burp Suite Decoder. Lacked exp claim, allowing indefinite use if stolen.
+Images          | [3.png]
+Corrections     | Added { expiresIn: '1h' } to jwt.sign in authRouter.js. Retested with 5-second expiration, confirmed 401 Unauthorized after expiry.
+
+
 
 
 ## Peer Attack
 ```
 Note: We previously agreed before the peer attack to not do any brute force attacks as to not incur extra charges on our AWS accounts
 ```
-#### David:
+### David:
 
 #### Poor Design w/ purchasing pizzas
 | Item           | Result                                                                         |
@@ -77,9 +113,32 @@ Note: We previously agreed before the peer attack to not do any brute force atta
 
 ### Carlee:
 
+#### Identification and Authentication Failures
+
+Item            | Result
+----------------|--------
+Date            | April 13, 2025
+Target          | pizza.pizza324.click 
+Classification  | Identification and Authentication Failures
+Severity        | 2
+Description     | Decoded JWT from PUT /api/auth using Burp Suite Decoder. Lacked exp claim, allowing indefinite use if stolen.
+Images          | [4.png]
+Corrections     | Needs to add { expiresIn: '1h' } to jwt.sign in authRouter.js. 
+
+#### Broken Access Control
+Item            | Result
+----------------|--------
+Date            | April 13, 2025
+Target          | pizza.carlee329.click
+Classification  | Broken Access Control
+Severity        | 4 (Low)
+Description     | Sent PUT /api/chaos/true as diner using Repeater. Received 200 OK with {"chaos":false}, indicating non-admins can access the endpoint but not enable chaos.
+Images          | [5.png]
+Corrections     | Updated orderRouter.js to return 403 for non-admins. Retested and confirmed 403 Forbidden.
+
+
 
 ## Combined Summary of Learnings
-This was a fun and informative learning experience. Our findings were that our websites
-were vulnerable for various things including Brute Force Attacks, Poor Design, & 
-Default Credentials. Little things overlooked or shortcutted in development can lead to
-massive issues once a system has users. 
+```
+Penetration testing was a fun and informative learning experience. In each of our self attacks we identified various vulnerablilites including Brute Force Attacks, Poor Design, Default Credentials, Broken Access controls, Identification and Authentication Failures, and SQL Injections. When attacking eachothers websites we found that both of our websites were largely safeproofed against attacks after doing our own, other than two attacks. Overall, we discovered that a website seemingly perfect could contain hidden but massive issues once a system has consistent users when a may overlooked or shortcut development.
+```
